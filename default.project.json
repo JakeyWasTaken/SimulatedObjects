@@ -1,0 +1,18 @@
+{
+  "name": "SimulatedObjects",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "SimulatedObjects": {
+        "$path": "lib/"
+      }
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "dev/"
+      }
+    }
+  }
+}
