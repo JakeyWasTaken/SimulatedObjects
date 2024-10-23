@@ -1,5 +1,4 @@
 --!optimize 2
---- @class General
 --- General helper class to contain small pure functions
 
 local General = {}
@@ -263,11 +262,36 @@ function General.AppendTables(...: { [any]: any })
 	return NewArray
 end
 
-function General.AssertTableParameter(Table: { [any]: any }, TableName: string, Key: any, ValueType: string)
-	assert(Table[Key], `Expected key of type '{typeof(Key)}' with value '{Key}' in {TableName}`)
+function General.AppendIntoTable(Table: { [any]: any }, ...: { [any]: any })
+	local Length = select("#", ...)
+
+	for i = 1, Length do
+		local Array = select(i, ...)
+
+		for k, v in Array do
+			if type(k) == "number" then
+				table.insert(Table, v)
+			else
+				Table[k] = v
+			end
+		end
+	end
+
+	return Table
+end
+
+function General.AssertTableParameter(Table: { [any]: any }, TableName: string, Key: any, ValueType: string, Optional: boolean)
+	local Exists = Table[Key] ~= nil
+
+	if not Optional then
+		assert(Exists, `Expected key of type '{typeof(Key)}' with value '{Key}' in {TableName}`)
+	elseif not Exists then
+		return
+	end
+
 	assert(
 		typeof(Table[Key]) == ValueType,
-		`Expected value of type '{ValueType}' under key of type '{typeof(Key)}' with value '{Key}' in {TableName}`
+		`Expected {Optional and "optional " or ""}value to be of type '{ValueType}' under key '{Key}' :: '{typeof(Key)}' in {TableName}`
 	)
 end
 
