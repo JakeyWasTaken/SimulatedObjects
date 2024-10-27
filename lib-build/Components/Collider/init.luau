@@ -189,65 +189,65 @@ end
 --- Alpha is a value between 0 - 1; 0 being the point is in the middle of the shape and 1 being it on the surface.
 --- Returns IsInside, Position, Normal, Alpha
 function CCollider:GetClosestPoint(Point: Vector3, PointRadius: number): (boolean, Vector3, Vector3, number)
-	debug.profilebegin("CCollider::GetClosestPoint")
-	local Center = self.m_Center -- we do this here because we just assume its been cached at this point
+do end	
+local Center = self.m_Center -- we do this here because we just assume its been cached at this point
 	local Data = self.Data
 
 	if self.Shape == "Sphere" then
 		local IsInside, Position, Normal, Alpha = ShapeSphere(Center.Position, Data.Radius, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	elseif self.Shape == "Box" then
 		local IsInside, Position, Normal, Alpha = ShapeBox(Center, Data.Size, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	elseif self.Shape == "Capsule" then
 		local p0 = Data.Start.WorldPosition
 		local p1 = Data.End.WorldPosition
 		local IsInside, Position, Normal, Alpha = ShapeCapsule(p0, p1, Data.Radius, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	elseif self.Shape == "RoundedFrustum" then
 		local p0 = Data.Start.WorldPosition
 		local p1 = Data.End.WorldPosition
 		local r0 = Data.StartRadius
 		local r1 = Data.EndRadius
 		local IsInside, Position, Normal, Alpha = ShapeRoundedFrustum(p0, p1, r0, r1, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	end
 
 	warn(`Invalid shape for collider "{self.Shape}"`)
-	debug.profileend()
-	return false, Point, Vector3.yAxis, 0
+do end	
+return false, Point, Vector3.yAxis, 0
 end
 
 function CCollider:DrawDebug()
+do		
+return
+end
 
-	
 
 
-local Center = self:GetCenter()
-	local DebugStr = `{self.Id}\nObjects: {#self.m_Streaming}\nShape: {self.Shape}`
-	Gizmo.SetStyle(Color3.new(1, 0, 1))
-	Gizmo.Text:Draw(Center.Position, DebugStr)
 
-	Gizmo.SetStyle(Color3.new(1.000000, 0.407, 0.407), 0, true)
-	if self.Shape == "Sphere" then
-		Gizmo.Sphere:Draw(self:GetCenter(), self.Data.Radius, 10, 360)
-	elseif self.Shape == "Box" then
-		Gizmo.Box:Draw(self:GetCenter(), self.Data.Size, true)
-	elseif self.Shape == "Capsule" then
-		local p0 = self.Data.Start.WorldPosition
-		local p1 = self.Data.End.WorldPosition
-		local Transform = CFrame.lookAt((p0 + p1) / 2, p1, self.Data.Start.WorldCFrame.UpVector) * CFrame.Angles(math.pi / 2, 0, 0)
-		Gizmo.Capsule:Draw(Transform, self.Data.Radius, (p0 - p1).Magnitude, 10)
-	elseif self.Shape == "RoundedFrustum" then
-		local p0 = self.Data.Start.WorldPosition
-		local p1 = self.Data.End.WorldPosition
-		local Transform = CFrame.lookAt((p0 + p1) / 2, p1, self.Data.Start.WorldCFrame.UpVector) * CFrame.Angles(-math.pi / 2, 0, 0)
-		Gizmo.RoundedFrustum:Draw(Transform, self.Data.StartRadius, self.Data.EndRadius, (p0 - p1).Magnitude, 10)
-	end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 end
 
 return CCollider

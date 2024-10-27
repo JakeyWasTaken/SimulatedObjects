@@ -4,5 +4,6 @@ return {
 		Damping = 4,
 		Speed = 4,
 		Force = 50,
+		WindInfluence = 1,
 	},
 }

@@ -16,6 +16,8 @@ export type ObjectData = {
 	MaxAngle: number,
 	ApexRadius: number,
 
+	WindInfluence: number?,
+
 	Mass: number?,
 	Damping: number?,
 	Speed: number?,

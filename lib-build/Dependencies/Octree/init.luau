@@ -45,6 +45,7 @@ local OctreeNode = require(script.OctreeNode)
 local OctreeRegionUtils = require(script.OctreeRegionUtils)
 
 local EPSILON = 1e-9
+local MAX_REGION_SIZE = 128
 
 local Octree = {}
 Octree.ClassName = "Octree"
@@ -58,7 +59,7 @@ Octree.__index = Octree
 function Octree.new()
 	local self = setmetatable({}, Octree)
 
-	self._maxRegionSize = { 512, 512, 512 } -- these should all be the same number
+	self._maxRegionSize = { MAX_REGION_SIZE, MAX_REGION_SIZE, MAX_REGION_SIZE } -- these should all be the same number
 	self._maxDepth = 4
 	self._regionHashMap = {} -- [hash] = region
 

@@ -6,6 +6,7 @@ it should point towards the apex. The Secondary Axis (Y) should point towards th
 
 ]]
 
+local Config = require(script.Parent.Parent.Config)
 local General = require(script.Parent.Parent.Utils.General)
 local Gizmo = require(script.Parent.Parent.Dependencies.Gizmo)
 local Log = require(script.Parent.Parent.Utils.Log)
@@ -16,6 +17,7 @@ local _Defaults = require(script.Parent.Parent.Defaults)
 local _Spring = require(script.Parent.Parent.Dependencies.Spring)
 
 local Defaults = _Defaults.Object
+local SEED_WRAP = Config.SEED_WRAP
 
 local SafeUnit = General.SafeUnitV3
 
@@ -43,7 +45,10 @@ local function Slerp(q0, q1, t)
 	return Vector3.new(xx * c + yx * s, xy * c + yy * s, xz * c + yz * s)
 end
 
-local CObject = {}
+local CObject = {
+	WindCache = {},
+	WindCacheFrame = -1,
+}
 CObject.__index = CObject
 
 type Spring = typeof(_Spring.create())
@@ -61,6 +66,8 @@ export type CObject = {
 	InitialUp: Vector3,
 
 	Id: Types.Id,
+	Seed: number,
+	LastUpdateTime: number, -- os.clock() time of when this object was last updated
 	LastContactState: boolean, -- boolean of if we were contacting anything last frame
 	OrientSign: number, -- Sign of our orient (-1, 0, 1); Set on initial contact
 
@@ -74,6 +81,8 @@ export type CObject = {
 	-- Propertys from ObjectData
 	ApexRadius: number,
 	MaxAngle: number,
+
+	WindInfluence: number,
 
 	-- Flags
 	Orients: boolean,
@@ -94,6 +103,8 @@ function CObject.new(Data: Types.ObjectData): CObject
 
 	AssertParameter("MaxAngle", "number")
 	AssertParameter("ApexRadius", "number")
+
+	AssertParameter("WindInfluence", "number", true)
 
 	AssertParameter("Mass", "number", true)
 	AssertParameter("Damping", "number", true)
@@ -137,6 +148,8 @@ function CObject.new(Data: Types.ObjectData): CObject
 	self.InitialUp = (ApexAttachment.WorldPosition - RootAttachment.WorldPosition).Unit
 
 	self.Id = nil
+	self.Seed = math.random(1, 1e6) % SEED_WRAP -- Wraps around from 1 to SEED_WRAP, this is for optimizing wind
+	self.LastUpdateTime = os.clock() + (math.random() - 0.5) * 0.1 -- Add some offset to avoid a large amount of objects pooling up on one frame
 	self.LastContactState = false
 	self.OrientSign = 1
 
@@ -148,6 +161,8 @@ function CObject.new(Data: Types.ObjectData): CObject
 	-- Propertys from ObjectData
 	self.ApexRadius = Data.ApexRadius
 	self.MaxAngle = math.rad(Data.MaxAngle)
+
+	self.WindInfluence = Data.WindInfluence or Defaults.WindInfluence
 
 	-- Flags
 	self.Orients = Data.Orients
@@ -218,14 +233,35 @@ function CObject:ReleaseSimulatingColliders(ColliderIds: { Types.Id })
 end
 
 -- Returns rotation cframe
-function CObject:SolveWind(): CFrame
-	return CFrame.identity
+function CObject:SolveWind(Amplitude, Frequency, LowAmp): CFrame
+	debug.profilebegin("CObject::SolveWind")
+	local Seed = self.Seed
+	local CachedWind = CObject.WindCache[Seed]
+	local FrameCount = shared.__FRAME_COUNT
+	if CObject.WindCacheFrame == FrameCount and CachedWind then
+		debug.profileend()
+		return CachedWind
+	elseif CObject.WindCacheFrame ~= FrameCount then
+		table.clear(CObject.WindCache)
+		CObject.WindCacheFrame = FrameCount
+	end
+
+	local Rotation
+	if Amplitude < 1e-5 or Frequency < 1e-5 then
+		Rotation = CFrame.identity
+	else
+		Rotation =
+			CFrame.Angles(math.noise(Seed, 0, Frequency) * LowAmp, math.noise(Seed, Frequency, 0) * LowAmp, math.noise(Frequency, Seed, 0) * LowAmp)
+	end
+
+	CObject.WindCache[Seed] = Rotation
+	debug.profileend()
+	return Rotation
 end
 
 -- Returns cframe which should be applied
-function CObject:Step(Delta: number, Colliders: { typeof(_Collider.new({} :: any)) }): CFrame
+function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Collider.new({} :: any)) }): CFrame
 	if not self.Simulating then
-		print("not simlating")
 		return self.InitialTransform
 	end
 
@@ -318,7 +354,7 @@ function CObject:Step(Delta: number, Colliders: { typeof(_Collider.new({} :: any
 
 	-- ------------------------------ Apply spring ------------------------------ --
 	local SpringVector = SafeUnit(SpringPosition)
-	local Transform = CFrame.lookAlong(Vector3.zero, SpringVector, UpVector)
+	local Transform = CFrame.lookAlong(Vector3.zero, SpringVector, UpVector) * WindCFrame
 	self.SpringTransform = CFrame.new(RootCFrame.Position) * Transform * CFrame.new(self.RootOffset.Position):Inverse()
 
 	debug.profileend()
