@@ -13,3 +13,6 @@
 ADD ID TO VOLUMES
 
 SimObjs -> Loop through colliders, check if theyre in radius of camera -> Get streaming jobs from colliders -> Stream out -> Do stream out jobs -> Stream in
+
+
+REDUCE DT FOR OBJECTS FURTHER AWAY

@@ -29,7 +29,7 @@ local function Slerp(q0, q1, t)
 	local py = q1.y
 	local pz = q1.z
 	local dot = xx * px + xy * py + xz * pz
-	if dot > 1 - 1e-4 then
+	if dot > 0.9999 then
 		local t0 = 1 - t
 		return Vector3.new(xx * t0 + px * t, xy * t0 + py * t, xz * t0 + pz * t)
 	end
@@ -82,7 +82,7 @@ export type CObject = {
 	Mass: number,
 	Speed: number,
 	Force: number,
-	Damping: number,
+	Damping: number
 } & typeof(CObject)
 
 function CObject.new(Data: Types.ObjectData): CObject
@@ -144,9 +144,9 @@ function CObject.new(Data: Types.ObjectData): CObject
 	self.m_SimulatedBy = {}
 	self.m_Spring = nil
 	self.m_SpringId = -1
-
 	-- Propertys from ObjectData
-	self.ApexRadius = Data.ApexRadius
+	
+self.ApexRadius = Data.ApexRadius
 	self.MaxAngle = math.rad(Data.MaxAngle)
 
 	-- Flags
@@ -258,15 +258,15 @@ function CObject:Step(Delta: number, Colliders: { typeof(_Collider.new({} :: any
 			end
 		end
 		debug.profileend()
+do			
 
-		if _G.DEV then
-			Gizmo.SetStyle(Color3.new(IsInside and 1 or 0, IsInside and 0 or 1))
+Gizmo.SetStyle(Color3.new(IsInside and 1 or 0, IsInside and 0 or 1))
 			Gizmo.Sphere:Draw(CFrame.new(Position), 0.15, 9, 360)
 			Gizmo.Arrow:Draw(Position, Position + Normal * 1.5, 0.15, 0.25, 9)
 			Gizmo.SetStyle(Color3.new(1, 1, 1))
 			Gizmo.Ray:Draw(ApexCFrameNow.Position, Position)
-		end
-	end
+end	
+end
 	debug.profileend()
 
 	if self.LastContactState ~= IsColliding then
@@ -289,15 +289,15 @@ function CObject:Step(Delta: number, Colliders: { typeof(_Collider.new({} :: any
 		end
 		UpVector = Slerp(UpVector, TargetVector, math.min(Delta * (IsColliding and 10 or 7.5), 1))
 	end
+do		
 
-	if _G.DEV then
-		Gizmo.SetStyle(Color3.new(0, 0, 1))
+Gizmo.SetStyle(Color3.new(0, 0, 1))
 		Gizmo.Arrow:Draw(ApexFramePosition, ApexFramePosition + UpVector * 1.5, 0.15, 0.25, 9)
 		Gizmo.Arrow:Draw(ApexFramePosition, ApexFramePosition + InitialUp * 1.5, 0.15, 0.25, 9)
-	end
-
+end
 	-- -------------------- Limit angle of the target vector -------------------- --
-	debug.profilebegin("Limit Vector")
+	
+debug.profilebegin("Limit Vector")
 	local VectorAngle = math.acos(InitialUp:Dot(RawTargetVector))
 	local MaxAngle = self.MaxAngle
 	local TargetVector
@@ -327,11 +327,11 @@ function CObject:Step(Delta: number, Colliders: { typeof(_Collider.new({} :: any
 end
 
 function CObject:DrawDebug()
-	if not _G.DEV then
-		return
-	end
 
-	self = self :: CObject
+	
+
+
+self = self :: CObject
 
 	local InitialUp = self.InitialUp
 	local RootCFrame = self.InitialTransform * self.RootOffset
@@ -347,8 +347,8 @@ function CObject:DrawDebug()
 		if MaxAngle < 89.5 then
 			ConeRadius = ROTATION_CONE_LENGTH * math.tan(MaxAngle)
 		elseif MaxAngle > 90 then
-			InverseDirection = -1
-			ConeRadius = ROTATION_CONE_LENGTH * math.tan(math.pi - MaxAngle)
+			InverseDirection = -1			
+ConeRadius = ROTATION_CONE_LENGTH * math.tan(math.pi - MaxAngle)
 		else
 			ROTATION_CONE_LENGTH = 0
 			ConeRadius = 5

@@ -7,8 +7,8 @@ AddCollider: () -> ()
 
 ]]
 
-local SPRING_POOL_SIZE = 2 ^ 11
-local MAX_FRAME_COUNT = 2 ^ 17
+local SPRING_POOL_SIZE = 2048
+local MAX_FRAME_COUNT = 131072
 
 shared.__FRAME_COUNT = 0
 
@@ -411,10 +411,10 @@ function SimulatedObjects.Step(Delta: number)
 	debug.profileend()
 
 	debug.profileend()
+do		
 
-	-- ---------------------------------- Debug --------------------------------- --
-	if _G.DEV then
-		for _, ColliderId in ActiveColliders do
+
+for _, ColliderId in ActiveColliders do
 			local Collider = WorldColliders[ColliderId]
 
 			Collider:DrawDebug()
@@ -425,7 +425,7 @@ function SimulatedObjects.Step(Delta: number)
 
 			Object:DrawDebug()
 		end
-	end
+end
 end
 
 -- Populate Spring Pool

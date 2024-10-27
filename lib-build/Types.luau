@@ -21,7 +21,7 @@ export type ObjectData = {
 	Speed: number?,
 	Force: number?,
 
-	Orients: boolean,
+	Orients: boolean
 }
 
 -- ----------------------------- Collider Types ----------------------------- --
@@ -30,14 +30,14 @@ export type BoxColliderData = {
 	Shape: "Box",
 	Center: Attachment,
 	Size: Vector3,
-	StreamingRadius: number,
+	StreamingRadius: number
 }
 
 export type SphereColliderData = {
 	Shape: "Sphere",
 	Center: Attachment,
 	Radius: number,
-	StreamingRadius: number,
+	StreamingRadius: number
 }
 
 export type CapsuleColliderData = {
@@ -45,7 +45,7 @@ export type CapsuleColliderData = {
 	Start: Attachment,
 	End: Attachment,
 	Radius: number,
-	StreamingRadius: number,
+	StreamingRadius: number
 }
 
 export type RoundedFrustumColliderData = {
@@ -54,7 +54,7 @@ export type RoundedFrustumColliderData = {
 	End: Attachment,
 	StartRadius: number,
 	EndRadius: number,
-	StreamingRadius: number,
+	StreamingRadius: number
 }
 
 export type ColliderData = BoxColliderData | SphereColliderData | CapsuleColliderData | RoundedFrustumColliderData

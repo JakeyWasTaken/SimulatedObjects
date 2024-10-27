@@ -28,7 +28,7 @@ export type CCollider = {
 
 	m_Center: CFrame,
 	m_CenterLastFrame: CFrame,
-	m_LastGetCenterCall: number,
+	m_LastGetCenterCall: number
 } & typeof(CCollider)
 
 function CCollider.new(Data: Types.ColliderData): CCollider
@@ -77,8 +77,8 @@ function CCollider.new(Data: Types.ColliderData): CCollider
 	self.m_Center = CFrame.identity
 	self.m_CenterLastFrame = CFrame.identity
 	self.m_LastGetCenterCall = -1
-
-	return self
+	
+return self
 end
 
 -- Returns center, SameCFrameAsLastFrame
@@ -223,11 +223,11 @@ function CCollider:GetClosestPoint(Point: Vector3, PointRadius: number): (boolea
 end
 
 function CCollider:DrawDebug()
-	if not _G.DEV then
-		return
-	end
 
-	local Center = self:GetCenter()
+	
+
+
+local Center = self:GetCenter()
 	local DebugStr = `{self.Id}\nObjects: {#self.m_Streaming}\nShape: {self.Shape}`
 	Gizmo.SetStyle(Color3.new(1, 0, 1))
 	Gizmo.Text:Draw(Center.Position, DebugStr)

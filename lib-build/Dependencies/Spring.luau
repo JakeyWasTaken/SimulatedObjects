@@ -4,9 +4,9 @@
 -- Constants
 
 local ITERATIONS = 8
-local MAX_DT = 1 / 10
-
+local MAX_DT = 0.1
 -- Module
+
 
 local SPRING = {}
 

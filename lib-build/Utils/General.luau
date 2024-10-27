@@ -5,7 +5,7 @@ local General = {}
 
 --- Callback assert.
 --- Returns true if the assertion failed
-function General.CBASSERT(condition: boolean, callback: (...any) -> ()?, ...: any?): boolean
+function General.CBASSERT(condition: boolean, callback: ((...any) -> ())?, ...: any?): boolean
 	if not condition then
 		if callback then
 			callback(...)

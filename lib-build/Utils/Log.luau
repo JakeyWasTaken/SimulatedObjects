@@ -2,19 +2,19 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 
-local Rich = RunService:IsStudio() and _G.DEV
+local Rich = RunService:IsStudio() and true
 
 local Log = {}
 
 local function createLogFunction(levelName: string, logFn: (...string) -> (), Color: Color3, PrintOutDev: boolean)
 	return function(...: any)
-		if not _G.DEV and not PrintOutDev then
-			return
-		end
 
 		-- Get the full path of the module (Path.To.Module), and then take the
 		-- final segment as the name (`Module`).
-		local modulePath = debug.info(2, "s"):split(".")
+		
+
+
+local modulePath = debug.info(2, "s"):split(".")
 		local moduleName = #modulePath == 0 and "" or `{modulePath[#modulePath - 1]}][{modulePath[#modulePath]}`
 		local date = DateTime.now():ToLocalTime()
 
