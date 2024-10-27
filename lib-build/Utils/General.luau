@@ -94,13 +94,13 @@ function General.GetAtanOfXY(x: number, y: number): number
 end
 
 function General.SignedAngleBetween(a: Vector3, b: Vector3, up: Vector3): number
-	local cos = a * b
+	local cos = a:Dot(b)
 	local sin = a:Cross(b).Magnitude
 	local cross = a:Cross(b)
 
 	local angle = math.atan2(sin, cos)
 
-	if up * cross < 0 then
+	if up:Dot(cross) < 0 then
 		angle = -angle
 	end
 
@@ -108,14 +108,14 @@ function General.SignedAngleBetween(a: Vector3, b: Vector3, up: Vector3): number
 end
 
 function General.AngleBetween(a: Vector3, b: Vector3): number
-	local cos = a * b
+	local cos = a:Dot(b)
 	local sin = a:Cross(b).Magnitude
 	return math.atan2(sin, cos)
 end
 
 --- This assumes that the normal vector is normalized.
 function General.ProjectOntoPlane(v: Vector3, n: Vector3): Vector3
-	return v - v * n / 1 * n
+	return v - v:Dot(n) / 1 * n
 end
 
 function General.FormatNumbers(decimal: number, ...: number): string
@@ -130,8 +130,8 @@ function General.FormatNumbers(decimal: number, ...: number): string
 end
 
 function General.RayPlaneIntersection(PlaneO: Vector3, PlaneN: Vector3, RayO: Vector3, RayN: Vector3): Vector3
-	local d = PlaneO * -PlaneN
-	local t = -(d + RayO * PlaneN) / RayN * PlaneN
+	local d = PlaneO:Dot(-PlaneN)
+	local t = -(d + RayO:Dot(PlaneN)) / RayN:Dot(PlaneN)
 	return RayO + t * RayN
 end
 
@@ -160,7 +160,7 @@ function General.Map<T>(Array: { T }, Func: (T) -> any)
 end
 
 function General.ReflectVector(Vector: Vector3, Normal: Vector3): Vector3
-	return Vector - 2 * (Vector * Normal) * Normal
+	return Vector - 2 * (Vector:Dot(Normal)) * Normal
 end
 
 --- @return (boolean, Vector3, Vector3) -- IsInside, ClosestPoint, Normal
@@ -227,7 +227,7 @@ function General.ClosestPointOnLineSegment(a0: Vector3, a1: Vector3, point: Vect
 	local Direction = (a1 - a0).Unit
 	local LeadDistance = (lead or 0) * Distance
 
-	local ProjectedDistance = ((point - a0) * Direction / Direction.Magnitude ^ 2) + LeadDistance
+	local ProjectedDistance = ((point - a0):Dot(Direction) / Direction.Magnitude ^ 2) + LeadDistance
 	ProjectedDistance = math.clamp(ProjectedDistance, 0, Distance)
 
 	return a0 + Direction * ProjectedDistance
