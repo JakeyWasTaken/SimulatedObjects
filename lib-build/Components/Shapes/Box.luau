@@ -13,8 +13,8 @@ end
 
 -- TODO: add alpha here
 local function ClosestPointFunc(cframe: CFrame, size: vector, point: vector): (boolean, Vector3, Vector3)
-	debug.profilebegin("box")
-	local rel = cframe:PointToObjectSpace(point)
+do end	
+local rel = cframe:PointToObjectSpace(point)
 	local sx, sy, sz = size.X, size.Y, size.Z
 	local rx, ry, rz = rel.X, rel.Y, rel.Z
 
@@ -24,12 +24,12 @@ local function ClosestPointFunc(cframe: CFrame, size: vector, point: vector): (b
 	local cz = math.clamp(rz, -sz * 0.5, sz * 0.5)
 
 	if not (cx == rx and cy == ry and cz == rz) then
-		debug.profilebegin("early return")
-		local closestPoint = cframe * vector.create(cx, cy, cz)
+do end		
+local closestPoint = cframe * vector.create(cx, cy, cz)
 		local normal = SafeUnit(point - closestPoint)
-		debug.profileend()
-		debug.profileend()
-		return false, closestPoint, normal
+do end do end		
+
+return false, closestPoint, normal
 	end
 
 	-- else, they are intersecting, find the surface the point is closest to
@@ -53,34 +53,34 @@ local function ClosestPointFunc(cframe: CFrame, size: vector, point: vector): (b
 		)
 	if max == posX then
 		local closestPoint = cframe * vec3(sx * 0.5, ry, rz)
-		debug.profileend()
-		return true, closestPoint, cframe.XVector
+do end		
+return true, closestPoint, cframe.XVector
 	elseif max == posY then
 		local closestPoint = cframe * vec3(rx, sy * 0.5, rz)
-		debug.profileend()
-		return true, closestPoint, cframe.YVector
+do end		
+return true, closestPoint, cframe.YVector
 	elseif max == posZ then
 		local closestPoint = cframe * vec3(rx, ry, sz * 0.5)
-		debug.profileend()
-		return true, closestPoint, cframe.ZVector
+do end		
+return true, closestPoint, cframe.ZVector
 	elseif max == negX then
 		local closestPoint = cframe * vec3(-sx * 0.5, ry, rz)
-		debug.profileend()
-		return true, closestPoint, -cframe.XVector
+do end		
+return true, closestPoint, -cframe.XVector
 	elseif max == negY then
 		local closestPoint = cframe * vec3(rx, -sy * 0.5, rz)
-		debug.profileend()
-		return true, closestPoint, -cframe.YVector
+do end		
+return true, closestPoint, -cframe.YVector
 	elseif max == negZ then
 		local closestPoint = cframe * vec3(rx, ry, -sz * 0.5)
-		debug.profileend()
-		return true, closestPoint, -cframe.ZVector
+do end		
+return true, closestPoint, -cframe.ZVector
 	end
 
 	-- Shouldn't reach
 	warn("CLOSEST POINT ON BOX FAIL")
-	debug.profileend()
-	return false, cframe.Position, vec3(0, 0, 0)
+do end	
+return false, cframe.Position, vec3(0, 0, 0)
 end
 
 --- Alpha is a value between 0 - 1; 0 being the point is in the middle of the shape and 1 being it on the surface.

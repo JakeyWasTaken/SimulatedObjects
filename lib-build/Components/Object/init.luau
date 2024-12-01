@@ -281,9 +281,9 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 	end
 
 	self = self :: CObject -- Types
-	debug.profilebegin("CObject::Step")
-
-	local InitialUp = self.InitialUp
+do end
+	
+local InitialUp = self.InitialUp
 	local RootCFrame = self.InitialTransform * self.RootOffset
 	local ApexCFrameNow = self.SpringTransform * self.ApexOffset
 	local Spring = self.m_Spring
@@ -291,12 +291,12 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 	local ApexFramePosition = ConvertVector(ApexCFrameNow.Position)
 	local ApexFrameNormal
 	local IsColliding = false
+do end	
 
-	debug.profilebegin("Iterate Colliders")
-	for _, Collider in Colliders do
-		debug.profilebegin(Collider.Id)
-		-- We add 0.01 to radius to prevent a small bouncing as the apex is pushed to the surface of the object
-		local IsInside, Position, Normal = Collider:GetClosestPoint(ApexFramePosition, self.ApexRadius + 0.01)
+for _, Collider in Colliders do
+local _=Collider.Id		-- We add 0.01 to radius to prevent a small bouncing as the apex is pushed to the surface of the object
+		
+local IsInside, Position, Normal = Collider:GetClosestPoint(ApexFramePosition, self.ApexRadius + 0.01)
 
 		if IsInside then
 			IsColliding = true
@@ -308,8 +308,8 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 				ApexFrameNormal = Normal
 			end
 		end
-		debug.profileend()
-	
+do end	
+
 
 
 
@@ -318,9 +318,9 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 
 
 end
-	debug.profileend()
-
-	if self.LastContactState ~= IsColliding then
+do end
+	
+if self.LastContactState ~= IsColliding then
 		self.LastContactState = IsColliding
 
 		self.OrientSign = IsColliding and math.sign(Dot(ApexFrameNormal, self.SpringTransform.UpVector)) or self.OrientSign
@@ -340,16 +340,16 @@ end
 		end
 		UpVector = Slerp(UpVector, TargetVector, math.min(Delta * (IsColliding and 10 or 7.5), 1))
 	end
-
-	-- -------------------- Limit angle of the target vector -------------------- --
-	
+do end	
 
 
 
 
 
-debug.profilebegin("Limit Vector")
-	local VectorAngle = math.acos(Dot(InitialUp, RawTargetVector))
+
+
+
+local VectorAngle = math.acos(Dot(InitialUp, RawTargetVector))
 	local MaxAngle = self.MaxAngle
 	local TargetVector
 	if VectorAngle >= MaxAngle then
@@ -360,21 +360,21 @@ debug.profilebegin("Limit Vector")
 	else
 		TargetVector = RawTargetVector
 	end
-	debug.profileend()
-
-	Spring.Target = TargetVector
-	debug.profilebegin("Spring Update")
-	local SpringPosition = Spring:update(Delta)
-	debug.profileend()
-
+do end
+	
+Spring.Target = TargetVector
+do end	
+local SpringPosition = Spring:update(Delta)
+do end
 	-- ------------------------------ Apply spring ------------------------------ --
-	local SpringVector = SafeUnit(SpringPosition)
+	
+local SpringVector = SafeUnit(SpringPosition)
 	local Transform = CFrame.lookAlong(vector.zero, SpringVector, UpVector) * WindCFrame
 	self.SpringTransform = CFrame.new(RootCFrame.Position) * Transform * CFrame.new(self.RootOffset.Position):Inverse()
+do end
+	
 
-	debug.profileend()
-
-	return self.SpringTransform
+return self.SpringTransform
 end
 
 function CObject:DrawDebug()

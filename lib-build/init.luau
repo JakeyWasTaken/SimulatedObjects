@@ -93,10 +93,10 @@ end
 
 function SimulatedObjects.Step(Delta: number)
 	shared.__FRAME_COUNT = shared.__FRAME_COUNT + 1 % MAX_FRAME_COUNT
+do end
+	
 
-	debug.profilebegin("SimulatedObjects::Step")
-
-	local Camera = workspace.CurrentCamera
+local Camera = workspace.CurrentCamera
 	local CameraCFrame = Camera.CFrame
 	local CameraPosition = CameraCFrame.Position
 
@@ -136,29 +136,29 @@ function SimulatedObjects.Step(Delta: number)
 	local BulkObjectJobsCount = 0
 
 	local StreamingResetJobs: Types.StreamingResetJobs = {}
+do end do end	
 
-	debug.profilebegin("Streaming")
 
-	debug.profilebegin("Gather active colliders")
-	for _, Collider in SimulatedObjects.Colliders do
-		debug.profilebegin(Collider.Id)
-		local Center = Collider:GetCenter()
+
+for _, Collider in SimulatedObjects.Colliders do
+local _=Collider.Id		
+local Center = Collider:GetCenter()
 
 		if (CameraPosition - Center.Position).Magnitude <= CAMERA_ACTIVE_RADIUS then
-			debug.profilebegin("Add active")
-			table.insert(ActiveColliders, Collider.Id)
+do end			
+table.insert(ActiveColliders, Collider.Id)
 			ActiveColliderHashMap[Collider.Id] = true
-			debug.profileend()
-		end
-		debug.profileend()
-	end
-	debug.profileend()
+do end		
+end
+do end	
+end
+do end do end
+	
 
-	debug.profilebegin("Get relationship streaming jobs")
 
-	local function ReleaseCollider(ColliderId)
-		debug.profilebegin("Release collider")
-		local Collider = WorldColliders[ColliderId]
+local function ReleaseCollider(ColliderId)
+do end		
+local Collider = WorldColliders[ColliderId]
 		-- We use release all objects because its faster than using a job if we need to get rid of every streamable
 		local WasStreaming = Collider:ReleaseAllObjects()
 
@@ -170,36 +170,36 @@ function SimulatedObjects.Step(Delta: number)
 				BulkObjectJobsCount += 1
 			end
 		end
-		debug.profileend()
-	end
+do end	
+end
+do end	
 
-	debug.profilebegin("Removing colliders")
-	for _, ColliderId in RemovingColliders do
-		debug.profilebegin(ColliderId)
-		ReleaseCollider(ColliderId)
+for _, ColliderId in RemovingColliders do
+do end		
+ReleaseCollider(ColliderId)
 		WorldColliders[ColliderId] = nil
-		debug.profileend()
-	end
-	debug.profileend()
+do end	
+end
+do end do end	-- Find what colliders are no longer active and give them stream jobs
+	
 
-	debug.profilebegin("In-active colliders")
-	-- Find what colliders are no longer active and give them stream jobs
-	for _, ColliderId in ActiveColliderIdsLastFrame do
+
+for _, ColliderId in ActiveColliderIdsLastFrame do
 		if ActiveColliderHashMap[ColliderId] then
 			continue
 		end
+do end		
 
-		debug.profilebegin(ColliderId)
-		ReleaseCollider(ColliderId)
-		debug.profileend()
-	end
-	debug.profileend()
+ReleaseCollider(ColliderId)
+do end	
+end
+do end do end	-- Get streamables of active colliders
+	
 
-	debug.profilebegin("Active colliders")
-	-- Get streamables of active colliders
-	for _, ColliderId in ActiveColliders do
-		debug.profilebegin(ColliderId)
-		local Collider = WorldColliders[ColliderId]
+
+for _, ColliderId in ActiveColliders do
+do end		
+local Collider = WorldColliders[ColliderId]
 
 		local StreamIn, StreamOut = Collider:GetStreamables(ObjectOctree, not ActiveColliderIdsLastFrame[ColliderId])
 
@@ -210,26 +210,26 @@ function SimulatedObjects.Step(Delta: number)
 		if #StreamOut > 0 then
 			table.insert(ReleaseStreamJobs, { ColliderId = ColliderId, ObjectIds = StreamOut })
 		end
-		debug.profileend()
-	end
-	debug.profileend()
-
-	SimulatedObjects.ActiveColliderIdsLastFrame = ActiveColliders
-
-	debug.profileend()
-
+do end	
+end
+do end
+	
+SimulatedObjects.ActiveColliderIdsLastFrame = ActiveColliders
+do end
 	-- ------------------------ Resolve relationship jobs ----------------------- --
 
-	if #ReleaseStreamJobs > 0 or #AssignStreamJobs > 0 or BulkObjectJobsCount > 0 then
-		debug.profilebegin("Resolve relationship jobs")
+	
 
-		debug.profilebegin("Release")
-		for _, Job in ReleaseStreamJobs do
+if #ReleaseStreamJobs > 0 or #AssignStreamJobs > 0 or BulkObjectJobsCount > 0 then
+do end do end		
+
+
+for _, Job in ReleaseStreamJobs do
 			local ColliderId = Job.ColliderId
 			local ObjectIds = Job.ObjectIds
+do end			
 
-			debug.profilebegin(ColliderId)
-			local Collider = WorldColliders[ColliderId]
+local Collider = WorldColliders[ColliderId]
 			Collider:ReleaseObjects(ObjectIds)
 
 			for _, ObjectId in ObjectIds do
@@ -239,17 +239,17 @@ function SimulatedObjects.Step(Delta: number)
 					BulkObjectReleaseJobs[ObjectId] = { ColliderId }
 				end
 			end
-			debug.profileend()
-		end
-		debug.profileend()
+do end		
+end
+do end do end		
 
-		debug.profilebegin("Assign")
-		for _, Job in AssignStreamJobs do
+
+for _, Job in AssignStreamJobs do
 			local ColliderId = Job.ColliderId
 			local ObjectIds = Job.ObjectIds
+do end			
 
-			debug.profilebegin(ColliderId)
-			local Collider = WorldColliders[ColliderId]
+local Collider = WorldColliders[ColliderId]
 			Collider:AssignObjects(ObjectIds)
 
 			for _, ObjectId in ObjectIds do
@@ -259,32 +259,32 @@ function SimulatedObjects.Step(Delta: number)
 					BulkObjectAssignJobs[ObjectId] = { ColliderId }
 				end
 			end
-			debug.profileend()
-		end
-		debug.profileend()
+do end		
+end
+do end do end do end		
 
-		-- Manage bulk object jobs
 
-		debug.profilebegin("Manage bulk object jobs")
 
-		debug.profilebegin("Release")
-		for ObjectId, ColliderIds in BulkObjectReleaseJobs do
-			debug.profilebegin(ObjectId)
-			local Object = WorldObjects[ObjectId]
+
+
+
+for ObjectId, ColliderIds in BulkObjectReleaseJobs do
+do end			
+local Object = WorldObjects[ObjectId]
 			Object:ReleaseSimulatingColliders(ColliderIds)
 
 			if Object:CanStreamOut() then
 				StreamOutJobs[ObjectId] = true
 				StreamingJobsCount += 1
 			end
-			debug.profileend()
-		end
-		debug.profileend()
+do end		
+end
+do end do end		
 
-		debug.profilebegin("Assign")
-		for ObjectId, ColliderIds in BulkObjectAssignJobs do
-			debug.profilebegin(ObjectId)
-			local Object = WorldObjects[ObjectId]
+
+for ObjectId, ColliderIds in BulkObjectAssignJobs do
+do end			
+local Object = WorldObjects[ObjectId]
 			Object:AssignSimulatingColliders(ColliderIds)
 
 			-- This covers a very specific edge case where the same frame where a
@@ -298,23 +298,23 @@ function SimulatedObjects.Step(Delta: number)
 				StreamInJobs[ObjectId] = true
 				StreamingJobsCount += 1
 			end
-			debug.profileend()
-		end
-		debug.profileend()
+do end		
+end
+do end do end do end	
 
-		debug.profileend()
-		debug.profileend()
-	end
+
+
+end
 
 	-- ------------------------- Resolve streaming jobs ------------------------- --
 
 	if StreamingJobsCount > 0 then
-		debug.profilebegin("Resolve streaming jobs")
+do end do end		
 
-		debug.profilebegin("Stream out")
-		for ObjectId in StreamOutJobs do
-			debug.profilebegin(ObjectId)
-			local Object = WorldObjects[ObjectId]
+
+for ObjectId in StreamOutJobs do
+do end			
+local Object = WorldObjects[ObjectId]
 			local SpringId, NeedsResetJob = Object:StreamOut()
 
 			if NeedsResetJob then
@@ -326,14 +326,14 @@ function SimulatedObjects.Step(Delta: number)
 			table.insert(FreeSpringPool, Spring)
 
 			SimulatingObjectIds[ObjectId] = nil
-			debug.profileend()
-		end
-		debug.profileend()
+do end		
+end
+do end do end		
 
-		debug.profilebegin("Stream in")
-		for ObjectId in StreamInJobs do
-			debug.profilebegin(ObjectId)
-			local Object = WorldObjects[ObjectId]
+
+for ObjectId in StreamInJobs do
+do end			
+local Object = WorldObjects[ObjectId]
 
 			local Spring = table.remove(FreeSpringPool)
 			local SpringId = #HotSpringPool + 1
@@ -343,17 +343,17 @@ function SimulatedObjects.Step(Delta: number)
 			SimulatingObjectIds[ObjectId] = ObjectId
 
 			Object:StreamIn(Spring, SpringId)
-			debug.profileend()
-		end
-		debug.profileend()
+do end		
+end
+do end do end	
 
-		debug.profileend()
-	end
+
+end
 
 	if #StreamingResetJobs > 0 then
-		debug.profilebegin("Streaming reset jobs")
-
-		for _, Job in StreamingResetJobs do
+do end
+		
+for _, Job in StreamingResetJobs do
 			local Object = Job.Object
 			local Transform = Job.InitialTransform
 
@@ -365,21 +365,21 @@ function SimulatedObjects.Step(Delta: number)
 				table.insert(BulkModelCFrames, Transform)
 			end
 		end
+do end	
 
-		debug.profileend()
-	end
+end
+do end do end do end
+	
 
-	debug.profileend()
 
-	-- -------------------------------------------------------------------------- --
-	--                               Object Updating                              --
-	-- -------------------------------------------------------------------------- --
 
-	debug.profilebegin("Object Step")
 
-	debug.profilebegin("Wind")
 
-	SimulatedObjects.WindSimulated = 0
+
+
+
+
+SimulatedObjects.WindSimulated = 0
 
 	-- TODO: make work with wind volumes eventually
 	local Identity = CFrame.identity
@@ -410,11 +410,11 @@ function SimulatedObjects.Step(Delta: number)
 	end
 
 	if WindActive then
-		debug.profilebegin("Octree Search")
-		local ObjectNodesInWindRadius = ObjectOctree:SearchRadius(CameraPosition, WIND_ACTIVE_RADIUS)
-		debug.profileend()
-
-		for _, ObjectNode in ObjectNodesInWindRadius do
+do end		
+local ObjectNodesInWindRadius = ObjectOctree:SearchRadius(CameraPosition, WIND_ACTIVE_RADIUS)
+do end
+		
+for _, ObjectNode in ObjectNodesInWindRadius do
 			local ObjectId = ObjectNode.Object
 
 			if SimulatingObjectIds[ObjectId] or SimulatedObjects.WindSimulatedLastFrame[ObjectId] or SimulatedObjects.WindSimulated > 100 then
@@ -461,15 +461,15 @@ function SimulatedObjects.Step(Delta: number)
 
 		table.clear(SimulatedObjects.WindSimulatedLastFrame)
 	end
-	debug.profileend()
+do end
+	
+for ObjectId, Simulating in SimulatingObjectIds do
+do end		
 
-	for ObjectId, Simulating in SimulatingObjectIds do
-		-- if not InViewObjects[ObjectId] then
-		-- 	continue
-		-- end
 
-		debug.profilebegin(ObjectId)
-		local Object = WorldObjects[ObjectId]
+
+
+local Object = WorldObjects[ObjectId]
 
 		local ObjectDelta = Time - Object.LastUpdateTime
 		local Rate
@@ -478,8 +478,8 @@ function SimulatedObjects.Step(Delta: number)
 			local Distance = (CameraPosition - Object.SpringTransform.Position).Magnitude
 
 			if Distance > CAMERA_ACTIVE_RADIUS then
-				debug.profileend()
-				continue
+do end				
+continue
 			elseif Distance <= THROTTLING_START_RADIUS then
 				Rate = OBJECT_UPDATE_RATE
 			else
@@ -489,8 +489,8 @@ function SimulatedObjects.Step(Delta: number)
 		end
 
 		if ObjectDelta < Rate then
-			debug.profileend()
-			continue
+do end			
+continue
 		end
 
 		Object.LastUpdateTime = Time
@@ -510,19 +510,19 @@ function SimulatedObjects.Step(Delta: number)
 			table.insert(BulkObjects, Object.Object)
 			table.insert(BulkCFrames, Transform)
 		end
+do end	
 
-		debug.profileend()
-	end
+end
+do end do end
+	
 
-	debug.profileend()
 
-	-- -------------------------------------------------------------------------- --
-	--                              Object Transform                              --
-	-- -------------------------------------------------------------------------- --
 
-	debug.profilebegin("Object Transform")
 
-	workspace:BulkMoveTo(BulkObjects, BulkCFrames)
+
+
+
+workspace:BulkMoveTo(BulkObjects, BulkCFrames)
 
 	for ModelIndex, Model in BulkModels do
 		Model:PivotTo(BulkModelCFrames[ModelIndex])
@@ -532,10 +532,10 @@ function SimulatedObjects.Step(Delta: number)
 	table.clear(BulkCFrames)
 	table.clear(BulkModels)
 	table.clear(BulkModelCFrames)
+do end do end
 
-	debug.profileend()
 
-	debug.profileend()
+
 
 
 

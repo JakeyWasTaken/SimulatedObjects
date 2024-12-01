@@ -139,27 +139,27 @@ end
 
 --- @return { Id }, { Id } -- StreamIn, StreamOut
 function CCollider:GetStreamables(ObjectOctree: typeof(_Octree.new()), JustActive: boolean): ({ Types.Id }, { Types.Id })
-	debug.profilebegin("CCollider::GetStreamables")
-	local StreamingObjects = self.m_Streaming
+do end	
+local StreamingObjects = self.m_Streaming
 	local StreamingObjectsHashMap = self.m_StreamingHashMap
 	local StreamingRadius = self.Data.StreamingRadius
 	local Center, SameAsLastFrame = self:GetCenter()
 
 	if SameAsLastFrame and not JustActive then
-		debug.profileend()
-		return {}, {}
+do end		
+return {}, {}
 	end
 
 	Center = Center.Position
 
 	local StreamOut = {}
 	local StreamIn = {}
+do end	
 
-	debug.profilebegin("Octree Search")
-	local ObjectNodes = ObjectOctree:SearchRadius(Center, StreamingRadius)
-	debug.profileend()
-
-	local ObjectIdsHashmap: { [Types.Id]: boolean } = {}
+local ObjectNodes = ObjectOctree:SearchRadius(Center, StreamingRadius)
+do end
+	
+local ObjectIdsHashmap: { [Types.Id]: boolean } = {}
 
 	-- -------------------------------- Stream In ------------------------------- --
 
@@ -185,45 +185,45 @@ function CCollider:GetStreamables(ObjectOctree: typeof(_Octree.new()), JustActiv
 		StreamingObjectsHashMap[ObjectId] = false
 		table.insert(StreamOut, ObjectId)
 	end
+do end	
 
-	debug.profileend()
-	return StreamIn, StreamOut
+return StreamIn, StreamOut
 end
 
 --- Alpha is a value between 0 - 1; 0 being the point is in the middle of the shape and 1 being it on the surface.
 --- Returns IsInside, Position, Normal, Alpha
 function CCollider:GetClosestPoint(Point: vector, PointRadius: number): (boolean, vector, vector, number)
-	debug.profilebegin("CCollider::GetClosestPoint")
-	local Center = self.m_Center -- we do this here because we just assume its been cached at this point
+do end	
+local Center = self.m_Center -- we do this here because we just assume its been cached at this point
 	local Data = self.Data
 
 	if self.Shape == "Sphere" then
 		local IsInside, Position, Normal, Alpha = ShapeSphere(Center.Position, Data.Radius, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	elseif self.Shape == "Box" then
 		local IsInside, Position, Normal, Alpha = ShapeBox(Center, Data.Size, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	elseif self.Shape == "Capsule" then
 		local p0 = Data.Start.WorldPosition
 		local p1 = Data.End.WorldPosition
 		local IsInside, Position, Normal, Alpha = ShapeCapsule(p0, p1, Data.Radius, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	elseif self.Shape == "RoundedFrustum" then
 		local p0 = Data.Start.WorldPosition
 		local p1 = Data.End.WorldPosition
 		local r0 = Data.StartRadius
 		local r1 = Data.EndRadius
 		local IsInside, Position, Normal, Alpha = ShapeRoundedFrustum(p0, p1, r0, r1, Point, PointRadius)
-		debug.profileend()
-		return IsInside, Position, Normal, Alpha
+do end		
+return IsInside, Position, Normal, Alpha
 	end
 
 	warn(`Invalid shape for collider "{self.Shape}"`)
-	debug.profileend()
-	return false, Point, vector.create(0, 1, 0), 0
+do end	
+return false, Point, vector.create(0, 1, 0), 0
 end
 
 function CCollider:DrawDebug()
