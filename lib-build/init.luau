@@ -83,6 +83,7 @@ function SimulatedObjects.AddCollider(ColliderData: Types.ColliderData)
 	SimulatedObjects.Colliders[Id] = Collider
 end
 
+--- Removes on the next Step cycle
 function SimulatedObjects.RemoveCollider(ColliderId: Types.Id)
 	if not SimulatedObjects.Colliders[ColliderId] then
 		return

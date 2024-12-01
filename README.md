@@ -61,6 +61,7 @@ The documentation will be sparse, types and the dev script should more or less o
 - [x] Faster Wind
 - [x] Support Multiple Colliders
 - [x] Support Models
+- [x] Colliders can be removed
 - [ ] Double Check Migration to new vector lib
 - [ ] Wind Volumes
 - [ ] Force Volumes

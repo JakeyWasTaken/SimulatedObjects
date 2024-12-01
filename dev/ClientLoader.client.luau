@@ -38,10 +38,10 @@ InInstance(GlowFolder, function(Glow)
 	SimulatedObjects.AddObject({ Object = Glow, ApexRadius = 0.25, MaxAngle = 20, Orients = false, Damping = 3.5 })
 end)
 
-for _, Zombie in workspace:WaitForChild("Zombies"):GetChildren() do
-	local Root = Zombie.HumanoidRootPart
-	SimulatedObjects.AddCollider({ Shape = "Capsule", Start = Root.p0, End = Root.p1, Radius = 1.769, StreamingRadius = 10 })
-end
+-- for _, Zombie in workspace:WaitForChild("Zombies"):GetChildren() do
+-- 	local Root = Zombie.HumanoidRootPart
+-- 	SimulatedObjects.AddCollider({ Shape = "Capsule", Start = Root.p0, End = Root.p1, Radius = 1.769, StreamingRadius = 10 })
+-- end
 
 SimulatedObjects.AddObject({ Object = workspace:WaitForChild("Debug"), ApexRadius = 0.25, MaxAngle = 25, Orients = true })
 
