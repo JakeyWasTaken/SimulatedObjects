@@ -192,7 +192,7 @@ end
 
 --- Alpha is a value between 0 - 1; 0 being the point is in the middle of the shape and 1 being it on the surface.
 --- Returns IsInside, Position, Normal, Alpha
-function CCollider:GetClosestPoint(Point: Vector3, PointRadius: number): (boolean, Vector3, Vector3, number)
+function CCollider:GetClosestPoint(Point: vector, PointRadius: number): (boolean, vector, vector, number)
 	debug.profilebegin("CCollider::GetClosestPoint")
 	local Center = self.m_Center -- we do this here because we just assume its been cached at this point
 	local Data = self.Data
@@ -223,7 +223,7 @@ function CCollider:GetClosestPoint(Point: Vector3, PointRadius: number): (boolea
 
 	warn(`Invalid shape for collider "{self.Shape}"`)
 	debug.profileend()
-	return false, Point, Vector3.yAxis, 0
+	return false, Point, vector.create(0, 1, 0), 0
 end
 
 function CCollider:DrawDebug()

@@ -14,10 +14,10 @@ local SPRING = {}
 
 function SPRING.create(mass: number?, force: number?, damping: number?, speed: number?)
 	local spring = {
-		Target = Vector3.zero,
-		Position = Vector3.zero,
-		Velocity = Vector3.zero,
-		_Acceleration = Vector3.zero,
+		Target = vector.zero,
+		Position = vector.zero,
+		Velocity = vector.zero,
+		_Acceleration = vector.zero,
 
 		Mass = mass or 5,
 		Force = force or 50,
@@ -28,11 +28,11 @@ function SPRING.create(mass: number?, force: number?, damping: number?, speed: n
 	function spring.reset(self, InitialPosition, InitialTarget)
 		self.Position = InitialPosition
 		self.Target = InitialTarget
-		self.Velocity = Vector3.zero
-		self._Acceleration = Vector3.zero
+		self.Velocity = vector.zero
+		self._Acceleration = vector.zero
 	end
 
-	function spring.shove(self, Force: Vector3)
+	function spring.shove(self, Force: vector)
 		local x, y, z = Force.X, Force.Y, Force.Z
 		if x ~= x or x == math.huge or x == -math.huge then
 			x = 0
@@ -43,10 +43,10 @@ function SPRING.create(mass: number?, force: number?, damping: number?, speed: n
 		if z ~= z or z == math.huge or z == -math.huge then
 			z = 0
 		end
-		self.Velocity = self.Velocity + Vector3.new(x, y, z)
+		self.Velocity = self.Velocity + vector.create(x, y, z)
 	end
 
-	function spring.applyForce(self, Force: Vector3)
+	function spring.applyForce(self, Force: vector)
 		local x, y, z = Force.X, Force.Y, Force.Z
 		if x ~= x or x == math.huge or x == -math.huge then
 			x = 0
@@ -57,10 +57,10 @@ function SPRING.create(mass: number?, force: number?, damping: number?, speed: n
 		if z ~= z or z == math.huge or z == -math.huge then
 			z = 0
 		end
-		self._Acceleration += Vector3.new(x, y, z) / self.Mass
+		self._Acceleration += vector.create(x, y, z) / self.Mass
 	end
 
-	function spring.update(self, dt: number): Vector3
+	function spring.update(self, dt: number): vector
 		local scaledDeltaTime = math.min(dt, 1) * self.Speed / ITERATIONS
 
 		if scaledDeltaTime > MAX_DT then
@@ -73,7 +73,7 @@ function SPRING.create(mass: number?, force: number?, damping: number?, speed: n
 
 			acceleration -= self.Velocity * self.Damping
 			acceleration += self._Acceleration
-			self._Acceleration = Vector3.zero
+			self._Acceleration = vector.zero
 
 			self.Velocity += acceleration * scaledDeltaTime
 			self.Position += self.Velocity * scaledDeltaTime

@@ -1,27 +1,30 @@
 --!native
 
+local vec3 = vector.create
+local Mag = vector.magnitude
+
 export type Octree<T> = {
 	ClearAllNodes: (self: Octree<T>) -> (),
 	GetAllNodes: (self: Octree<T>) -> { Node<T> },
 	ForEachNode: (self: Octree<T>) -> () -> Node<T>?,
 	FindFirstNode: (self: Octree<T>, object: T) -> Node<T>?,
 	CountNodes: (self: Octree<T>) -> number,
-	CreateNode: (self: Octree<T>, position: Vector3, object: T) -> Node<T>,
+	CreateNode: (self: Octree<T>, position: vector, object: T) -> Node<T>,
 	RemoveNode: (self: Octree<T>, node: Node<T>) -> (),
-	ChangeNodePosition: (self: Octree<T>, node: Node<T>, position: Vector3) -> (),
-	SearchRadius: (self: Octree<T>, position: Vector3, radius: number) -> { Node<T> },
-	ForEachInRadius: (self: Octree<T>, position: Vector3, radius: number) -> () -> Node<T>?,
-	GetNearest: (self: Octree<T>, position: Vector3, radius: number, maxNodes: number?) -> { Node<T> },
+	ChangeNodePosition: (self: Octree<T>, node: Node<T>, position: vector) -> (),
+	SearchRadius: (self: Octree<T>, position: vector, radius: number) -> { Node<T> },
+	ForEachInRadius: (self: Octree<T>, position: vector, radius: number) -> () -> Node<T>?,
+	GetNearest: (self: Octree<T>, position: vector, radius: number, maxNodes: number?) -> { Node<T> },
 }
 
 type OctreeInternal<T> = Octree<T> & {
 	Size: number,
 	Regions: { Region<T> },
-	_getRegion: (self: OctreeInternal<T>, maxLevel: number, position: Vector3) -> Region<T>,
+	_getRegion: (self: OctreeInternal<T>, maxLevel: number, position: vector) -> Region<T>,
 }
 
 type Region<T> = {
-	Center: Vector3,
+	Center: vector,
 	Size: number,
 	Radius: number,
 	Regions: { Region<T> },
@@ -31,7 +34,7 @@ type Region<T> = {
 }
 
 type Node<T> = {
-	Position: Vector3,
+	Position: vector,
 	Object: T,
 }
 
@@ -42,7 +45,7 @@ type NodeInternal<T> = Node<T> & {
 local MAX_SUB_REGIONS = 4
 local DEFAULT_TOP_REGION_SIZE = 512
 
-local function IsPointInBox(point: Vector3, boxCenter: Vector3, boxSize: number)
+local function IsPointInBox(point: vector, boxCenter: vector, boxSize: number)
 	local half = boxSize / 2
 	return point.X >= boxCenter.X - half
 		and point.X <= boxCenter.X + half
@@ -74,9 +77,9 @@ local function CountNodesInRegion<T>(region: Region<T>)
 	return n
 end
 
-local function GetTopRegion<T>(octree, position: Vector3, create: boolean): Region<T>
+local function GetTopRegion<T>(octree, position: vector, create: boolean): Region<T>
 	local size = octree.Size
-	local origin = Vector3.new(RoundTo(position.X, size), RoundTo(position.Y, size), RoundTo(position.Z, size))
+	local origin = vec3(RoundTo(position.X, size), RoundTo(position.Y, size), RoundTo(position.Z, size))
 	local region = octree.Regions[origin]
 	if not region and create then
 		region = {
@@ -92,12 +95,12 @@ local function GetTopRegion<T>(octree, position: Vector3, create: boolean): Regi
 	return region
 end
 
-local function GetRegionsInRadius<T>(octree, position: Vector3, radius: number): { Region<T> }
+local function GetRegionsInRadius<T>(octree, position: vector, radius: number): { Region<T> }
 	local regionsFound = {}
 	local function ScanRegions(regions: { Region<T> })
 		-- Find regions that have overlapping radius values
 		for _, region in ipairs(regions) do
-			local distance = (position - region.Center).Magnitude
+			local distance = Mag(position - region.Center)
 			if distance < (radius + region.Radius) then
 				if region.Nodes then
 					table.insert(regionsFound, region)
@@ -117,7 +120,7 @@ local function GetRegionsInRadius<T>(octree, position: Vector3, radius: number):
 			local x = i % 3 - 1
 			local y = math.floor(i / 9) - 1
 			local z = math.floor(i / 3) % 3 - 1
-			local offset = Vector3.new(x * radius, y * radius, z * radius)
+			local offset = vec3(x * radius, y * radius, z * radius)
 			local startRegion = GetTopRegion(octree, position + offset, false)
 			if startRegion and not startRegions[startRegion] then
 				startRegions[startRegion] = true
@@ -129,7 +132,7 @@ local function GetRegionsInRadius<T>(octree, position: Vector3, radius: number):
 		for x = -maxOffset, maxOffset do
 			for y = -maxOffset, maxOffset do
 				for z = -maxOffset, maxOffset do
-					local offset = Vector3.new(x * size, y * size, z * size)
+					local offset = vec3(x * size, y * size, z * size)
 					local startRegion = GetTopRegion(octree, position + offset, false)
 					if startRegion and not startRegions[startRegion] then
 						startRegions[startRegion] = true
@@ -145,7 +148,7 @@ local function GetRegionsInRadius<T>(octree, position: Vector3, radius: number):
 		-- cases where that happens. Just scan all top-level regions and check
 		-- the distance.
 		for _, region in octree.Regions do
-			local distance = (position - region.Center).Magnitude
+			local distance = Mag(position - region.Center)
 			if distance < (radius + region.Radius) then
 				ScanRegions(region.Regions)
 			end
@@ -213,7 +216,7 @@ function Octree:CountNodes(): number
 	return #self:GetAllNodes()
 end
 
-function Octree:CreateNode<T>(position: Vector3, object: T): Node<T>
+function Octree:CreateNode<T>(position: vector, object: T): Node<T>
 	local region = (self :: OctreeInternal<T>):_getRegion(MAX_SUB_REGIONS, position)
 	local node: Node<T> = {
 		Region = region,
@@ -257,7 +260,7 @@ function Octree:RemoveNode<T>(node: NodeInternal<T>)
 	node.Region = nil
 end
 
-function Octree:ChangeNodePosition<T>(node: NodeInternal<T>, position: Vector3)
+function Octree:ChangeNodePosition<T>(node: NodeInternal<T>, position: vector)
 	node.Position = position
 	local newRegion = self:_getRegion(MAX_SUB_REGIONS, position)
 	if newRegion == node.Region then
@@ -268,13 +271,13 @@ function Octree:ChangeNodePosition<T>(node: NodeInternal<T>, position: Vector3)
 	node.Region = newRegion
 end
 
-function Octree:SearchRadius<T>(position: Vector3, radius: number): { Node<T> }
+function Octree:SearchRadius<T>(position: vector, radius: number): { Node<T> }
 	local nodes = {}
 	local regions = GetRegionsInRadius(self, position, radius)
 	for _, region in ipairs(regions) do
 		if region.Nodes ~= nil then
 			for _, node: Node<T> in ipairs(region.Nodes) do
-				if (node.Position - position).Magnitude < radius then
+				if Mag(node.Position - position) < radius then
 					table.insert(nodes, node)
 				end
 			end
@@ -283,13 +286,13 @@ function Octree:SearchRadius<T>(position: Vector3, radius: number): { Node<T> }
 	return nodes
 end
 
-function Octree:ForEachInRadius<T>(position: Vector3, radius: number): () -> Node<T>?
+function Octree:ForEachInRadius<T>(position: vector, radius: number): () -> Node<T>?
 	local regions = GetRegionsInRadius(self, position, radius)
 	return coroutine.wrap(function()
 		for _, region: Region<T> in ipairs(regions) do
 			if region.Nodes ~= nil then
 				for _, node: Node<T> in ipairs(region.Nodes) do
-					if (node.Position - position).Magnitude < radius then
+					if Mag(node.Position - position) < radius then
 						coroutine.yield(node)
 					end
 				end
@@ -298,11 +301,11 @@ function Octree:ForEachInRadius<T>(position: Vector3, radius: number): () -> Nod
 	end)
 end
 
-function Octree:GetNearest<T>(position: Vector3, radius: number, maxNodes: number?): { Node<T> }
+function Octree:GetNearest<T>(position: vector, radius: number, maxNodes: number?): { Node<T> }
 	local nodes = self:SearchRadius(position, radius)
 	table.sort(nodes, function(n0: Node<T>, n1: Node<T>)
-		local d0 = (n0.Position - position).Magnitude
-		local d1 = (n1.Position - position).Magnitude
+		local d0 = Mag(n0.Position - position)
+		local d1 = Mag(n1.Position - position)
 		return d0 < d1
 	end)
 	if maxNodes ~= nil and #nodes > maxNodes then
@@ -311,7 +314,7 @@ function Octree:GetNearest<T>(position: Vector3, radius: number, maxNodes: numbe
 	return nodes
 end
 
-function Octree:_getRegion<T>(maxLevel: number, position: Vector3): Region<T>
+function Octree:_getRegion<T>(maxLevel: number, position: vector): Region<T>
 	local function GetRegion(regionParent: Region<T>?, regions: { Region<T> }, level: number): Region<T>
 		local region: Region<T>? = nil
 		-- Find region that contains the position:
@@ -326,11 +329,11 @@ function Octree:_getRegion<T>(maxLevel: number, position: Vector3): Region<T>
 			local size = (self :: OctreeInternal<T>).Size / (2 ^ (level - 1))
 			local origin = if regionParent
 				then regionParent.Center
-				else Vector3.new(RoundTo(position.X, size), RoundTo(position.Y, size), RoundTo(position.Z, size))
+				else vec3(RoundTo(position.X, size), RoundTo(position.Y, size), RoundTo(position.Z, size))
 			local center = origin
 			if regionParent then
 				-- Offset position to fit the subregion within the parent region:
-				center += Vector3.new(
+				center += vec3(
 					if position.X > origin.X then size / 2 else -size / 2,
 					if position.Y > origin.Y then size / 2 else -size / 2,
 					if position.Z > origin.Z then size / 2 else -size / 2

@@ -7,7 +7,7 @@ e.g. lune run scripts/darkluaconfig otherconfig.json
 
 ]]
 
-local DEBUG_PROFILING = false
+local DEBUG_PROFILING = true
 -- Globals injected into _G
 local MACROS = {
 	DEV = false,

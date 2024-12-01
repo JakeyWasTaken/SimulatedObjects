@@ -19,7 +19,22 @@ local _Spring = require(script.Parent.Parent.Dependencies.Spring)
 local Defaults = _Defaults.Object
 local WIND_SEED_WRAP = Config.WIND_SEED_WRAP
 
-local SafeUnit = General.SafeUnitV3
+local Vec3 = vector.create
+local Mag = vector.magnitude
+local Norm = vector.normalize
+local Dot = vector.dot
+
+local function ConvertVector(Vector: Vector3 | vector): vector
+	return vector.create(Vector.X, Vector.Y, Vector.Z)
+end
+
+local function SafeUnit(v3)
+	if Mag(v3) > 0 then
+		return Norm(v3)
+	end
+
+	return vector.zero
+end
 
 local function Slerp(q0, q1, t)
 	q0 = q0.unit
@@ -33,7 +48,7 @@ local function Slerp(q0, q1, t)
 	local dot = xx * px + xy * py + xz * pz
 	if dot > 1 - 1e-4 then
 		local t0 = 1 - t
-		return Vector3.new(xx * t0 + px * t, xy * t0 + py * t, xz * t0 + pz * t)
+		return Vec3(xx * t0 + px * t, xy * t0 + py * t, xz * t0 + pz * t)
 	end
 
 	local yx = px - dot * xx
@@ -42,12 +57,12 @@ local function Slerp(q0, q1, t)
 	local a = math.acos(dot) * t
 	local c = math.cos(a)
 	local s = math.sin(a) / (yx * yx + yy * yy + yz * yz) ^ 0.5
-	return Vector3.new(xx * c + yx * s, xy * c + yy * s, xz * c + yz * s)
+	return Vec3(xx * c + yx * s, xy * c + yy * s, xz * c + yz * s)
 end
 
 local CObject = {
-	WindCache = {},
-	WindCacheFrame = -1,
+	-- WindCache = {},
+	-- WindCacheFrame = -1,
 }
 CObject.__index = CObject
 
@@ -63,7 +78,7 @@ export type CObject = {
 	InitialTransform: CFrame,
 	SpringTransform: CFrame, -- Our springs transform, this carries over from frame to frame
 
-	InitialUp: Vector3,
+	InitialUp: vector,
 
 	Id: Types.Id,
 	WindSeed: number,
@@ -76,9 +91,9 @@ export type CObject = {
 	m_Spring: Spring?,
 	m_SpringId: number,
 
-	m_LastSurfaceNormal: Vector3?,
+	m_LastSurfaceNormal: vector?,
 
-	-- Propertys from ObjectData
+	-- Property's from ObjectData
 	ApexRadius: number,
 	MaxAngle: number,
 
@@ -87,7 +102,7 @@ export type CObject = {
 	-- Flags
 	Orients: boolean,
 
-	-- Spring propertys
+	-- Spring property's
 	Mass: number,
 	Speed: number,
 	Force: number,
@@ -145,7 +160,7 @@ function CObject.new(Data: Types.ObjectData): CObject
 	self.InitialTransform = PrimaryPart.CFrame
 	self.SpringTransform = PrimaryPart.CFrame
 
-	self.InitialUp = (ApexAttachment.WorldPosition - RootAttachment.WorldPosition).Unit
+	self.InitialUp = Norm(ApexAttachment.WorldPosition - RootAttachment.WorldPosition)
 
 	self.Id = nil
 	self.WindSeed = math.random(1, WIND_SEED_WRAP)
@@ -158,7 +173,7 @@ function CObject.new(Data: Types.ObjectData): CObject
 	self.m_Spring = nil
 	self.m_SpringId = -1
 
-	-- Propertys from ObjectData
+	-- Property's from ObjectData
 	self.ApexRadius = Data.ApexRadius
 	self.MaxAngle = math.rad(Data.MaxAngle)
 
@@ -167,7 +182,7 @@ function CObject.new(Data: Types.ObjectData): CObject
 	-- Flags
 	self.Orients = Data.Orients
 
-	-- Spring propertys
+	-- Spring property's
 	self.Mass = Data.Mass or Defaults.Mass
 	self.Speed = Data.Speed or Defaults.Speed
 	self.Force = Data.Force or Defaults.Force
@@ -232,32 +247,32 @@ function CObject:ReleaseSimulatingColliders(ColliderIds: { Types.Id })
 	self.m_SimulatedBy = NewTable
 end
 
--- Returns rotation cframe
-function CObject:SolveWind(Amplitude, Frequency, LowAmp): CFrame
-	debug.profilebegin("CObject::SolveWind")
-	local Seed = self.WindSeed
-	local CachedWind = CObject.WindCache[Seed]
-	local FrameCount = shared.__FRAME_COUNT
-	if CObject.WindCacheFrame == FrameCount and CachedWind then
-		debug.profileend()
-		return CachedWind
-	elseif CObject.WindCacheFrame ~= FrameCount then
-		table.clear(CObject.WindCache)
-		CObject.WindCacheFrame = FrameCount
-	end
+-- Returns rotation cframe, UNUSED
+-- function CObject:SolveWind(Amplitude, Frequency, LowAmp): CFrame
+-- 	debug.profilebegin("CObject::SolveWind")
+-- 	local Seed = self.WindSeed
+-- 	local CachedWind = CObject.WindCache[Seed]
+-- 	local FrameCount = shared.__FRAME_COUNT
+-- 	if CObject.WindCacheFrame == FrameCount and CachedWind then
+-- 		debug.profileend()
+-- 		return CachedWind
+-- 	elseif CObject.WindCacheFrame ~= FrameCount then
+-- 		table.clear(CObject.WindCache)
+-- 		CObject.WindCacheFrame = FrameCount
+-- 	end
 
-	local Rotation
-	if Amplitude < 1e-5 or Frequency < 1e-5 then
-		Rotation = CFrame.identity
-	else
-		Rotation =
-			CFrame.Angles(math.noise(Seed, 0, Frequency) * LowAmp, math.noise(Seed, Frequency, 0) * LowAmp, math.noise(Frequency, Seed, 0) * LowAmp)
-	end
+-- 	local Rotation
+-- 	if Amplitude < 1e-5 or Frequency < 1e-5 then
+-- 		Rotation = CFrame.identity
+-- 	else
+-- 		Rotation =
+-- 			CFrame.Angles(math.noise(Seed, 0, Frequency) * LowAmp, math.noise(Seed, Frequency, 0) * LowAmp, math.noise(Frequency, Seed, 0) * LowAmp)
+-- 	end
 
-	CObject.WindCache[Seed] = Rotation
-	debug.profileend()
-	return Rotation
-end
+-- 	CObject.WindCache[Seed] = Rotation
+-- 	debug.profileend()
+-- 	return Rotation
+-- end
 
 -- Returns cframe which should be applied
 function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Collider.new({} :: any)) }): CFrame
@@ -273,7 +288,7 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 	local ApexCFrameNow = self.SpringTransform * self.ApexOffset
 	local Spring = self.m_Spring
 
-	local ApexFramePosition = ApexCFrameNow.Position
+	local ApexFramePosition = ConvertVector(ApexCFrameNow.Position)
 	local ApexFrameNormal
 	local IsColliding = false
 
@@ -308,15 +323,15 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 	if self.LastContactState ~= IsColliding then
 		self.LastContactState = IsColliding
 
-		self.OrientSign = IsColliding and math.sign(ApexFrameNormal:Dot(self.SpringTransform.UpVector)) or self.OrientSign
+		self.OrientSign = IsColliding and math.sign(Dot(ApexFrameNormal, self.SpringTransform.UpVector)) or self.OrientSign
 	end
 
-	local RawTargetVector = IsColliding and (ApexFramePosition - RootCFrame.Position).Unit or InitialUp
+	local RawTargetVector = IsColliding and Norm(ApexFramePosition - RootCFrame.Position) or InitialUp
 	local UpVector = self.Orients and self.SpringTransform.UpVector or self.InitialTransform.UpVector
 
 	if self.Orients then
 		-- An issue occurs here where as a collider "backs" off (in the case where it stops colliding with the apex) the object will
-		-- start to spin back around towards its initial orientation; I dont think its a big deal
+		-- start to spin back around towards its initial orientation; I don't think its a big deal
 		local TargetVector
 		if ApexFrameNormal then
 			TargetVector = ApexFrameNormal * self.OrientSign
@@ -334,14 +349,14 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 
 	-- -------------------- Limit angle of the target vector -------------------- --
 	debug.profilebegin("Limit Vector")
-	local VectorAngle = math.acos(InitialUp:Dot(RawTargetVector))
+	local VectorAngle = math.acos(Dot(InitialUp, RawTargetVector))
 	local MaxAngle = self.MaxAngle
 	local TargetVector
 	if VectorAngle >= MaxAngle then
 		TargetVector = InitialUp
 			+ math.tan(MaxAngle)
-				* (RawTargetVector - RawTargetVector:Dot(InitialUp) * InitialUp)
-				/ (RawTargetVector - RawTargetVector:Dot(InitialUp) * InitialUp).Magnitude
+				* (RawTargetVector - Dot(RawTargetVector, InitialUp) * InitialUp)
+				/ Mag(RawTargetVector - Dot(RawTargetVector, InitialUp) * InitialUp)
 	else
 		TargetVector = RawTargetVector
 	end
@@ -354,7 +369,7 @@ function CObject:Step(Delta: number, WindCFrame: CFrame, Colliders: { typeof(_Co
 
 	-- ------------------------------ Apply spring ------------------------------ --
 	local SpringVector = SafeUnit(SpringPosition)
-	local Transform = CFrame.lookAlong(Vector3.zero, SpringVector, UpVector) * WindCFrame
+	local Transform = CFrame.lookAlong(vector.zero, SpringVector, UpVector) * WindCFrame
 	self.SpringTransform = CFrame.new(RootCFrame.Position) * Transform * CFrame.new(self.RootOffset.Position):Inverse()
 
 	debug.profileend()
@@ -409,7 +424,7 @@ function CObject:DrawDebug()
 	-- Debug info
 	do
 		Gizmo.SetStyle(Color3.new(1, 0, 1))
-		Gizmo.Text:Draw(RootCFrame.Position + Vector3.new(0, 5, 0), `{self.Id}\nColliders: {#self.m_SimulatedBy}`)
+		Gizmo.Text:Draw(RootCFrame.Position + Vec3(0, 5, 0), `{self.Id}\nColliders: {#self.m_SimulatedBy}`)
 	end
 end
 

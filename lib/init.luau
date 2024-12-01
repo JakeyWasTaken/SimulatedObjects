@@ -18,6 +18,10 @@ local Collider = require(script.Components.Collider)
 local Object = require(script.Components.Object)
 local Volume = require(script.Components.Volume)
 
+local function ConvertVector(Vector): vector
+	return vector.create(Vector.X, Vector.Y, Vector.Z)
+end
+
 local CAMERA_ACTIVE_RADIUS = Config.CAMERA_ACTIVE_RADIUS
 local WIND_ACTIVE_RADIUS = Config.WIND_ACTIVE_RADIUS
 local OBJECT_UPDATE_RATE = Config.OBJECT_UPDATE_RATE
@@ -60,7 +64,7 @@ function SimulatedObjects.AddObject(ObjectData: Types.ObjectData)
 	Object.Id = Id
 
 	SimulatedObjects.Objects[Id] = Object
-	SimulatedObjects.Octree:CreateNode((Object.InitialTransform * Object.ApexOffset).Position, Id)
+	SimulatedObjects.Octree:CreateNode(ConvertVector((Object.InitialTransform * Object.ApexOffset).Position), Id)
 end
 
 function SimulatedObjects.AddVolume(VolumeData: Types.VolumeData)
@@ -406,7 +410,9 @@ function SimulatedObjects.Step(Delta: number)
 	end
 
 	if WindActive then
+		debug.profilebegin("Octree Search")
 		local ObjectNodesInWindRadius = ObjectOctree:SearchRadius(CameraPosition, WIND_ACTIVE_RADIUS)
+		debug.profileend()
 
 		for _, ObjectNode in ObjectNodesInWindRadius do
 			local ObjectId = ObjectNode.Object
