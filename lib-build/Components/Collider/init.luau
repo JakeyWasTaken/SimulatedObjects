@@ -139,29 +139,32 @@ end
 
 --- @return { Id }, { Id } -- StreamIn, StreamOut
 function CCollider:GetStreamables(ObjectOctree: typeof(_Octree.new()), JustActive: boolean): ({ Types.Id }, { Types.Id })
-	local StreamingObjects = self.m_Streaming
+do end	
+local StreamingObjects = self.m_Streaming
 	local StreamingObjectsHashMap = self.m_StreamingHashMap
 	local StreamingRadius = self.Data.StreamingRadius
 	local Center, SameAsLastFrame = self:GetCenter()
 
 	if SameAsLastFrame and not JustActive then
-		return {}, {}
+do end		
+return {}, {}
 	end
 
 	Center = Center.Position
 
 	local StreamOut = {}
 	local StreamIn = {}
+do end	
 
-	-- Gizmo.SetStyle(Color3.new(1))
-	-- Gizmo.Sphere:Draw(CFrame.new(Center), StreamingRadius, 20, 360)
-
-	local ObjectIds: { Types.Id } = ObjectOctree:RadiusSearch(Center, StreamingRadius)
-	local ObjectIdsHashmap: { [Types.Id]: boolean } = {}
+local ObjectNodes = ObjectOctree:SearchRadius(Center, StreamingRadius)
+do end
+	
+local ObjectIdsHashmap: { [Types.Id]: boolean } = {}
 
 	-- -------------------------------- Stream In ------------------------------- --
 
-	for _, ObjectId in ObjectIds do
+	for _, ObjectNode in ObjectNodes do
+		local ObjectId = ObjectNode.Object
 		ObjectIdsHashmap[ObjectId] = true
 
 		if StreamingObjectsHashMap[ObjectId] then
@@ -182,8 +185,9 @@ function CCollider:GetStreamables(ObjectOctree: typeof(_Octree.new()), JustActiv
 		StreamingObjectsHashMap[ObjectId] = false
 		table.insert(StreamOut, ObjectId)
 	end
+do end	
 
-	return StreamIn, StreamOut
+return StreamIn, StreamOut
 end
 
 --- Alpha is a value between 0 - 1; 0 being the point is in the middle of the shape and 1 being it on the surface.

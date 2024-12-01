@@ -139,12 +139,14 @@ end
 
 --- @return { Id }, { Id } -- StreamIn, StreamOut
 function CCollider:GetStreamables(ObjectOctree: typeof(_Octree.new()), JustActive: boolean): ({ Types.Id }, { Types.Id })
+	debug.profilebegin("CCollider::GetStreamables")
 	local StreamingObjects = self.m_Streaming
 	local StreamingObjectsHashMap = self.m_StreamingHashMap
 	local StreamingRadius = self.Data.StreamingRadius
 	local Center, SameAsLastFrame = self:GetCenter()
 
 	if SameAsLastFrame and not JustActive then
+		debug.profileend()
 		return {}, {}
 	end
 
@@ -153,15 +155,16 @@ function CCollider:GetStreamables(ObjectOctree: typeof(_Octree.new()), JustActiv
 	local StreamOut = {}
 	local StreamIn = {}
 
-	-- Gizmo.SetStyle(Color3.new(1))
-	-- Gizmo.Sphere:Draw(CFrame.new(Center), StreamingRadius, 20, 360)
+	debug.profilebegin("Octree Search")
+	local ObjectNodes = ObjectOctree:SearchRadius(Center, StreamingRadius)
+	debug.profileend()
 
-	local ObjectIds: { Types.Id } = ObjectOctree:RadiusSearch(Center, StreamingRadius)
 	local ObjectIdsHashmap: { [Types.Id]: boolean } = {}
 
 	-- -------------------------------- Stream In ------------------------------- --
 
-	for _, ObjectId in ObjectIds do
+	for _, ObjectNode in ObjectNodes do
+		local ObjectId = ObjectNode.Object
 		ObjectIdsHashmap[ObjectId] = true
 
 		if StreamingObjectsHashMap[ObjectId] then
@@ -183,6 +186,7 @@ function CCollider:GetStreamables(ObjectOctree: typeof(_Octree.new()), JustActiv
 		table.insert(StreamOut, ObjectId)
 	end
 
+	debug.profileend()
 	return StreamIn, StreamOut
 end
 

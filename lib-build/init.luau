@@ -1,13 +1,6 @@
 --!native
---[[
 
-AddObject: () -> ()
-AddVolume: () -> ()
-AddCollider: () -> ()
-
-]]
-
-local SPRING_POOL_SIZE = 2048
+local SPRING_POOL_SIZE = 4096
 local MAX_FRAME_COUNT = 131072
 
 shared.__FRAME_COUNT = 0
@@ -20,7 +13,6 @@ local Types = require(script.Types)
 local Log = require(script.Utils.Log)
 local Octree = require(script.Dependencies.Octree)
 local Spring = require(script.Dependencies.Spring)
-local VectorMap = require(script.Dependencies.VectorMap)
 
 local Collider = require(script.Components.Collider)
 local Object = require(script.Components.Object)
@@ -31,10 +23,7 @@ local WIND_ACTIVE_RADIUS = Config.WIND_ACTIVE_RADIUS
 local OBJECT_UPDATE_RATE = Config.OBJECT_UPDATE_RATE
 local THROTTLED_OBJECT_UPDATE_RATE = Config.THROTTLED_OBJECT_UPDATE_RATE
 local THROTTLING_START_RADIUS = Config.THROTTLING_START_RADIUS
-
-local function Lerp(a, b, t)
-	return a + (b - a) * t
-end
+local WIND_SEED_WRAP = Config.WIND_SEED_WRAP
 
 local SimulatedObjects = {
 	FreeSpringPool = {}, -- Pool of springs not in use
@@ -43,6 +32,11 @@ local SimulatedObjects = {
 
 	RemovingColliders = {}, -- Dictionary of colliders to be removed on the next step cycle
 	ActiveColliderIdsLastFrame = {},
+
+	-- Wind Related
+	WindCache = {}, -- Dictionary of [WindSeed] = RotationCFrame for objects
+	WindSimulatedLastFrame = {},
+	WindSimulated = 0,
 
 	BulkObjects = table.create(500),
 	BulkCFrames = table.create(500),
@@ -54,7 +48,6 @@ local SimulatedObjects = {
 	Volumes = {},
 	Colliders = {},
 	Octree = Octree.new(),
-	VectorMap = VectorMap.new(),
 }
 
 function SimulatedObjects.GenerateId(Prefix: string): Types.Id
@@ -68,7 +61,6 @@ function SimulatedObjects.AddObject(ObjectData: Types.ObjectData)
 
 	SimulatedObjects.Objects[Id] = Object
 	SimulatedObjects.Octree:CreateNode((Object.InitialTransform * Object.ApexOffset).Position, Id)
-	SimulatedObjects.VectorMap:AddObject((Object.InitialTransform * Object.ApexOffset).Position, Id)
 end
 
 function SimulatedObjects.AddVolume(VolumeData: Types.VolumeData)
@@ -372,7 +364,7 @@ for _, Job in StreamingResetJobs do
 do end	
 
 end
-do end do end
+do end do end do end
 	
 
 
@@ -381,35 +373,13 @@ do end do end
 
 
 
-local function ComputeUpdateRate(Point)
-		local Distance = (CameraPosition - Point).Magnitude
 
-		if Distance <= THROTTLING_START_RADIUS then
-			return OBJECT_UPDATE_RATE
-		end
 
-		local Alpha = (Distance - THROTTLING_START_RADIUS) / (CAMERA_ACTIVE_RADIUS - THROTTLING_START_RADIUS)
-		return Lerp(OBJECT_UPDATE_RATE, THROTTLED_OBJECT_UPDATE_RATE, Alpha)
-	end
+SimulatedObjects.WindSimulated = 0
 
-	local function ComputeWindUpdateRate(Point)
-		local Distance = (CameraPosition - Point).Magnitude
-
-		if Distance <= THROTTLING_START_RADIUS then
-			return OBJECT_UPDATE_RATE
-		end
-
-		local Alpha = Distance / WIND_ACTIVE_RADIUS
-		return Lerp(OBJECT_UPDATE_RATE, THROTTLED_OBJECT_UPDATE_RATE, Alpha)
-	end
-
-	local InViewObjects = {}
-	local WindRotations = {}
-do end
 	-- TODO: make work with wind volumes eventually
-	
-
-local WorkspaceWind = workspace.GlobalWind
+	local Identity = CFrame.identity
+	local WorkspaceWind = workspace.GlobalWind
 	local WindSpeed, WindPower = 0, 0
 
 	local WindMagnitude = WorkspaceWind.Magnitude
@@ -421,56 +391,97 @@ local WorkspaceWind = workspace.GlobalWind
 	local Amplitude = WindPower * 0.2
 	local Frequency = Time * WindSpeed * 0.08
 	local LowAmp = Amplitude / 3
+	local WindActive = WindMagnitude > 1e-5
 
-	SimulatedObjects.VectorMap:ForEachObjectInView(CameraCFrame, Camera.FieldOfView, Camera.ViewportSize, WIND_ACTIVE_RADIUS, function(_, ObjectId)
-		InViewObjects[ObjectId] = true
+	local WindCache = {}
 
-		if WindMagnitude <= 1e-5 then
-			WindRotations[ObjectId] = CFrame.identity
-			return
+	for WindSeed = 1, WIND_SEED_WRAP do
+		WindCache[WindSeed] = WindActive
+				and CFrame.Angles(
+					math.noise(WindSeed, 0, Frequency) * LowAmp,
+					math.noise(WindSeed, Frequency, 0) * LowAmp,
+					math.noise(Frequency, WindSeed, 0) * LowAmp
+				)
+			or Identity
+	end
+
+	if WindActive then
+		local ObjectNodesInWindRadius = ObjectOctree:SearchRadius(CameraPosition, WIND_ACTIVE_RADIUS)
+
+		for _, ObjectNode in ObjectNodesInWindRadius do
+			local ObjectId = ObjectNode.Object
+
+			if SimulatingObjectIds[ObjectId] or SimulatedObjects.WindSimulatedLastFrame[ObjectId] or SimulatedObjects.WindSimulated > 100 then
+				continue
+			end
+
+			SimulatedObjects.WindSimulatedLastFrame[ObjectId] = true
+
+			local Object = WorldObjects[ObjectId]
+			local ObjectDelta = Time - Object.LastUpdateTime
+			local Jitter = (1 / math.random(60, 120))
+			local Rate
+
+			do -- Wind update rate
+				local Distance = (CameraPosition - Object.SpringTransform.Position).Magnitude
+
+				-- if Distance > WIND_ACTIVE_RADIUS then
+				-- 	continue
+				-- end
+
+				local Alpha = Distance / WIND_ACTIVE_RADIUS
+				Rate = OBJECT_UPDATE_RATE + (THROTTLED_OBJECT_UPDATE_RATE - OBJECT_UPDATE_RATE) * Alpha
+			end
+
+			if ObjectDelta + Jitter < Rate then
+				continue
+			end
+
+			Object.LastUpdateTime = Time
+			SimulatedObjects.WindSimulated += 1
+
+			local WindRotation = WindCache[Object.WindSeed]
+			local RootOffset = Object.RootOffset
+			local Transform = (Object.InitialTransform * RootOffset) * WindRotation * CFrame.new(RootOffset.Position):Inverse()
+
+			if Object.IsModel then
+				table.insert(BulkModels, Object.Object)
+				table.insert(BulkModelCFrames, Transform)
+			else
+				table.insert(BulkObjects, Object.Object)
+				table.insert(BulkCFrames, Transform)
+			end
 		end
 
-		local IsSimulating = SimulatingObjectIds[ObjectId]
-		local Object = WorldObjects[ObjectId]
-
-		local WindRotation = Object:SolveWind(Amplitude, Frequency, LowAmp)
-		if IsSimulating then
-			WindRotations[ObjectId] = WindRotation
-			return
-		end
-
-		local ObjectDelta = Time - Object.LastUpdateTime
-		local Rate = ComputeWindUpdateRate(Object.SpringTransform.Position) * 1.25
-		if ObjectDelta < Rate then
-			return
-		end
-
-		Object.LastUpdateTime = Time
-
-		local RootOffset = Object.RootOffset
-		local RootCFrame = Object.InitialTransform * RootOffset
-		local Transform = RootCFrame * WindRotation * CFrame.new(RootOffset.Position):Inverse()
-
-		if Object.IsModel then
-			table.insert(BulkModels, Object.Object)
-			table.insert(BulkModelCFrames, Transform)
-		else
-			table.insert(BulkObjects, Object.Object)
-			table.insert(BulkCFrames, Transform)
-		end
-	end)
+		table.clear(SimulatedObjects.WindSimulatedLastFrame)
+	end
 do end
 	
 for ObjectId, Simulating in SimulatingObjectIds do
-		if not InViewObjects[ObjectId] then
-			continue
-		end
 do end		
+
+
+
 
 local Object = WorldObjects[ObjectId]
 
 		local ObjectDelta = Time - Object.LastUpdateTime
-		local Rate = ComputeUpdateRate(Object.SpringTransform.Position)
+		local Rate
+
+		do -- Update rate
+			local Distance = (CameraPosition - Object.SpringTransform.Position).Magnitude
+
+			if Distance > CAMERA_ACTIVE_RADIUS then
+do end				
+continue
+			elseif Distance <= THROTTLING_START_RADIUS then
+				Rate = OBJECT_UPDATE_RATE
+			else
+				local Alpha = (Distance - THROTTLING_START_RADIUS) / (CAMERA_ACTIVE_RADIUS - THROTTLING_START_RADIUS)
+				Rate = OBJECT_UPDATE_RATE + (THROTTLED_OBJECT_UPDATE_RATE - OBJECT_UPDATE_RATE) * Alpha
+			end
+		end
+
 		if ObjectDelta < Rate then
 do end			
 continue
@@ -484,7 +495,7 @@ continue
 			table.insert(Colliders, WorldColliders[ColliderId])
 		end
 
-		local Transform = Object:Step(ObjectDelta, WindRotations[ObjectId], Colliders)
+		local Transform = Object:Step(ObjectDelta, WindCache[Object.WindSeed], Colliders)
 
 		if Object.IsModel then
 			table.insert(BulkModels, Object.Object)

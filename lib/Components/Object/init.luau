@@ -17,7 +17,7 @@ local _Defaults = require(script.Parent.Parent.Defaults)
 local _Spring = require(script.Parent.Parent.Dependencies.Spring)
 
 local Defaults = _Defaults.Object
-local SEED_WRAP = Config.SEED_WRAP
+local WIND_SEED_WRAP = Config.WIND_SEED_WRAP
 
 local SafeUnit = General.SafeUnitV3
 
@@ -41,7 +41,7 @@ local function Slerp(q0, q1, t)
 	local yz = pz - dot * xz
 	local a = math.acos(dot) * t
 	local c = math.cos(a)
-	local s = math.sin(a) / math.sqrt(yx * yx + yy * yy + yz * yz)
+	local s = math.sin(a) / (yx * yx + yy * yy + yz * yz) ^ 0.5
 	return Vector3.new(xx * c + yx * s, xy * c + yy * s, xz * c + yz * s)
 end
 
@@ -66,7 +66,7 @@ export type CObject = {
 	InitialUp: Vector3,
 
 	Id: Types.Id,
-	Seed: number,
+	WindSeed: number,
 	LastUpdateTime: number, -- os.clock() time of when this object was last updated
 	LastContactState: boolean, -- boolean of if we were contacting anything last frame
 	OrientSign: number, -- Sign of our orient (-1, 0, 1); Set on initial contact
@@ -148,7 +148,7 @@ function CObject.new(Data: Types.ObjectData): CObject
 	self.InitialUp = (ApexAttachment.WorldPosition - RootAttachment.WorldPosition).Unit
 
 	self.Id = nil
-	self.Seed = math.random(1, 1e6) % SEED_WRAP -- Wraps around from 1 to SEED_WRAP, this is for optimizing wind
+	self.WindSeed = math.random(1, WIND_SEED_WRAP)
 	self.LastUpdateTime = os.clock() + (math.random() - 0.5) * 0.1 -- Add some offset to avoid a large amount of objects pooling up on one frame
 	self.LastContactState = false
 	self.OrientSign = 1
@@ -235,7 +235,7 @@ end
 -- Returns rotation cframe
 function CObject:SolveWind(Amplitude, Frequency, LowAmp): CFrame
 	debug.profilebegin("CObject::SolveWind")
-	local Seed = self.Seed
+	local Seed = self.WindSeed
 	local CachedWind = CObject.WindCache[Seed]
 	local FrameCount = shared.__FRAME_COUNT
 	if CObject.WindCacheFrame == FrameCount and CachedWind then

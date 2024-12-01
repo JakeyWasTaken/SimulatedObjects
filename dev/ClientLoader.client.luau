@@ -38,10 +38,15 @@ InInstance(GlowFolder, function(Glow)
 	SimulatedObjects.AddObject({ Object = Glow, ApexRadius = 0.25, MaxAngle = 20, Orients = false, Damping = 3.5 })
 end)
 
--- SimulatedObjects.AddObject({ Object = workspace:WaitForChild("Debug"), ApexRadius = 0.25, MaxAngle = 25, Orients = true })
+for _, Zombie in workspace:WaitForChild("Zombies"):GetChildren() do
+	local Root = Zombie.HumanoidRootPart
+	SimulatedObjects.AddCollider({ Shape = "Capsule", Start = Root.p0, End = Root.p1, Radius = 1.769, StreamingRadius = 10 })
+end
 
-SimulatedObjects.AddCollider({ Shape = "Sphere", Center = ColliderA.Center, Radius = ColliderA.Size.X / 2, StreamingRadius = ColliderA.Size.X + 5 })
-SimulatedObjects.AddCollider({ Shape = "Box", Center = ColliderB.Center, Size = ColliderB.Size, StreamingRadius = ColliderB.Size.X + 5 })
+SimulatedObjects.AddObject({ Object = workspace:WaitForChild("Debug"), ApexRadius = 0.25, MaxAngle = 25, Orients = true })
+
+-- SimulatedObjects.AddCollider({ Shape = "Sphere", Center = ColliderA.Center, Radius = ColliderA.Size.X / 2, StreamingRadius = ColliderA.Size.X + 5 })
+-- SimulatedObjects.AddCollider({ Shape = "Box", Center = ColliderB.Center, Size = ColliderB.Size, StreamingRadius = ColliderB.Size.X + 5 })
 -- SimulatedObjects.AddCollider({
 -- 	Shape = "Box",
 -- 	Center = workspace:WaitForChild("DebugCollider"):WaitForChild("Center"),
@@ -79,39 +84,10 @@ Iris:Connect(function()
 	Iris.Window({ "debug" })
 
 	Iris.Text(`Free Springs: {#SimulatedObjects.FreeSpringPool}`)
-	Iris.Text(`Hot Springs: {2 ^ 11 - #SimulatedObjects.FreeSpringPool}`)
+	Iris.Text(`Hot Springs: {2 ^ 12 - #SimulatedObjects.FreeSpringPool}`)
+	Iris.Text(`Wind Simulated: {SimulatedObjects.WindSimulated}`)
 
 	Iris.DragVector3({ "Wind Speed", Vector3.one * 0.1, nil, nil, "%.3f" }, { number = Wind })
 
 	Iris.End()
 end)
-
--- WIND TEST
--- RunService.RenderStepped:Connect(function(delta)
--- 	local workspaceWind = workspace.GlobalWind
--- 	local windDirection = workspaceWind.Unit
--- 	local windSpeed, windPower = 0, 0
-
--- 	local windMagnitude = workspaceWind.Magnitude
--- 	if windMagnitude > 0 then
--- 		windPower = if windMagnitude > 1 then math.log10(windMagnitude) + 0.2 else 0.3
--- 		windSpeed = if windMagnitude < 100 then (windMagnitude * 1.2) + 5 else 125
--- 	end
-
--- 	local seed = 1
--- 	local now = os.clock()
--- 	local amp = windPower * 0.2
--- 	local freq = now * windSpeed * 0.08
--- 	local animValue = (math.noise(freq, 0, seed) + 0.4) * amp
--- 	local lowAmp = amp / 3
-
--- 	local Rotation = CFrame.Angles(math.noise(seed, 0, freq) * lowAmp, math.noise(seed, freq, 0) * lowAmp, math.noise(freq, seed, 0) * lowAmp)
--- 	--+ (windDirection * animValue * (amp * 2))
-
--- 	local Origin = Vector3.yAxis * 3
--- 	local length = 3
--- 	local cf = CFrame.new(Origin) * Rotation * CFrame.Angles(math.pi / 2, 0, 0)
-
--- 	Gizmo.SetStyle(Color3.new(1))
--- 	Gizmo.Ray:Draw(cf.Position, cf.Position + cf.LookVector * length)
--- end)

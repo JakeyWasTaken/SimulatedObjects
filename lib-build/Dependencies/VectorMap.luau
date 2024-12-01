@@ -18,7 +18,7 @@ export type Class = typeof(setmetatable(
 
 function VectorMap.new(voxelSize: number?)
 	return setmetatable({
-		_voxelSize = voxelSize or 25,
+		_voxelSize = voxelSize or 50,
 		_voxels = {},
 	}, VectorMap)
 end
